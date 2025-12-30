@@ -1,41 +1,57 @@
-This program was built in Ubuntu and MacOs environment and thus we created a DockerImage to ease testing.
+# MiniCov-Optimized-Test-Suite-Generator
 
-## Run the following commands to pull and run the docker image.
+## What is this project about?
 
-docker pull deepakintherace/benchmark:2.0
+This project evaluates the effectiveness of different test prioritization strategies using **mutation testing**. We compare three approaches for selecting and ordering test cases:
 
-docker run -it deepakintherace/benchmark:2.0
+1. **Random Prioritization** - Randomly selects test cases
+2. **Total Prioritization** - Prioritizes tests based on individual coverage scores
+3. **Additional Prioritization** - Uses greedy algorithm to maximize cumulative coverage
 
-### Warning the container may run for around 2 hours so please wait patiently!!!
+The framework tests these strategies across 7 benchmark programs (tcas, totinfo, replace, printtokens, printtokens2, schedule, schedule2) by:
+- Generating test suites using each prioritization strategy
+- Running tests against the original program and 100+ mutant versions (artificially buggy versions)
+- Measuring how many mutants each test suite can detect (kill)
 
-This will run all the files but the outputs will be stored in summary.txt file, inorder to access it you might have to get into the docker CLI and use touch commands
+## Metrics Measured
 
-### The summary file locations are
+### 1. **Mutation Score**
+- **What**: Number of mutants killed by each test suite
+- **How**: Compares output of original program vs. mutant versions for each test case
+- **Output**: Reports like `"[TestSuite] Suite identified X bugs in version vY"`
 
-/benchmark/tcas/summary.txt
+### 2. **Statement Coverage**
+- **What**: Percentage of code statements executed by test cases
+- **Target**: 98.45% coverage threshold
+- **How**: Uses GCC's gcov tool with `-fprofile-arcs -ftest-coverage` flags
 
-/benchmark/totinfo/summary.txt
+### 3. **Branch Coverage**
+- **What**: Percentage of code branches (if/else, loops) executed by test cases
+- **Target**: 100% coverage threshold
+- **How**: Uses GCC's gcov tool with branch coverage analysis
 
-and so...
+### 4. **Test Suite Size**
+- **What**: Number of test cases in each prioritized suite
+- **Comparison**: Different strategies may achieve similar coverage with different suite sizes
 
-For Evaluation purposes and to check the summary in an instance we have also uploaded our program that has fully run in the branch data-branch instead of master where the master branch does not have any of the executables or the output text files.
+### 5. **Coverage Efficiency**
+- **What**: How quickly each strategy reaches coverage thresholds
+- **Comparison**: Which strategy requires fewer tests to reach 98.45% statement or 100% branch coverage
 
-### To check for the generated testcases
+## Results
 
-1. Please go to the branch "data-branch" in Github
-2. In every program folder (like inside tcas, totinfo) you can find the generated testSuites
-3. The names of the test case are given as follows:-
+Results are stored in `summary.txt` files within each benchmark directory, showing:
+- Which mutants were killed by each test suite
+- Mutation detection effectiveness of each prioritization strategy
+- Comparison of random vs. coverage-based vs. greedy approaches
 
-   random-statement-suite.txt - randomP.txt
+## Quick Start
 
-   random-branch-suite.txt - branchRandomP.txt
+```bash
+# Run a single benchmark
+cd benchmarks/tcas
+gcc -o tcasScript tcasScript.c && ./tcasScript
 
-   total-statement-suite.txt - totalP.txt
-
-   total-branch-suite.txt - branchTotalP.txt
-
-   additional-statement-suite.txt - additionalP.txt
-
-   additional-branch-suite.txt - branchAdditional.txt
-
-If you would like to run each program separately go into the program directory for example tcas and run tcasScript.c and you can do this for the rest.
+# Run all benchmarks (takes ~2 hours)
+gcc -o runTestScript runTestScript.c && ./runTestScript
+```
